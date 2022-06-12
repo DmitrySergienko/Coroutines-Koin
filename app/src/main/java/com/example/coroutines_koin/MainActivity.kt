@@ -14,7 +14,7 @@ class MainActivity : AppCompatActivity() {
     val scope = CoroutineScope(Dispatchers.IO)
 
     //создаем job для упорядочиния работы корутин
-    var job: Job? = null
+    var job: Deferred<String>? = null
 
 
     lateinit var binding: ActivityMainBinding
@@ -23,23 +23,29 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //async специальны билдер который запускается асинхронно, его результ можно получить
+        //где вызывается await()
+        //он выполяет свою работу в фоне, а результат выводится когда запускаем await()
+        job = scope.async {
+            delay(3000)
+            "String"
+        }
         binding.button.setOnClickListener {
-            //создаем короутину
-            job?.cancel()
-            job = scope.launch {
-                repeat(100) {
-                    delay(1000)
-                    println("VVV $it")
-                }
+            scope.launch {
+                println("VVV" + job?.await())
+
             }
+
+
         }
 
-    }
+        suspend fun doSomthing(): String {
+            delay(2000)
 
-    suspend fun doSomthing(): String {
-        delay(2000)
+            return "Вовращаем строку"
+        }
 
-        return "Вовращаем строку"
+
     }
 
     //завершаем все короутины
@@ -47,6 +53,5 @@ class MainActivity : AppCompatActivity() {
         scope.cancel()
         super.onDestroy()
     }
-
 
 }
